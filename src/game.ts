@@ -1,5 +1,8 @@
 import {Insect, Bee, Ant, GrowerAnt, ThrowerAnt, EaterAnt, ScubaAnt, GuardAnt} from './ants';
 
+/**
+ * Controls the insects on a board and environmental control features
+ * */
 class Place {
   protected ant:Ant;
   protected guard:GuardAnt;
@@ -16,6 +19,9 @@ class Place {
 
   isWater():boolean { return this.water; }
 
+    /**
+     * Returns a guard ant.
+     * */
   getAnt():Ant { 
     if(this.guard) 
       return this.guard;
@@ -23,12 +29,20 @@ class Place {
       return this.ant;
   }
 
+    /**
+     * Returns an ant that is being guarded by a guard*/
   getGuardedAnt():Ant {
     return this.ant;
-  }
+    }
 
   getBees():Bee[] { return this.bees; }
 
+    /**
+     * Determines the closest bee to an ant, if any exist in the current context.
+     * @param maxDistance The length of the board
+     * @param minDistance Sets the zero value above undefined
+     * 
+     */
   getClosestBee(maxDistance:number, minDistance:number = 0):Bee {
 		let p:Place = this;
 		for(let dist = 0; p!==undefined && dist <= maxDistance; dist++) {
@@ -40,6 +54,11 @@ class Place {
 		return undefined;
   }
 
+    /**
+     * Places an ant or guard on the selected location.
+     * @param ant 
+     * 
+     */
   addAnt(ant:Ant):boolean {
     if(ant instanceof GuardAnt) {
       if(this.guard === undefined){
@@ -57,6 +76,9 @@ class Place {
     return false;
   }
 
+    /**
+     * Removes an ant from a selected location .
+     * */
   removeAnt():Ant {
     if(this.guard !== undefined){
       let guard = this.guard;
@@ -69,12 +91,20 @@ class Place {
       return ant;
     }
   }
-
+    /**
+     *  Adds Bee to game and the list of total bees at the indicted position.
+     * @param bee Creates a new bee
+     *
+     */
   addBee(bee:Bee):void {
     this.bees.push(bee);
     bee.setPlace(this);
   }
-
+    /**
+     * Takes a bee off the board at the specified index so a random bee at the front isnt removed
+     * @param bee
+     * 
+     */
   removeBee(bee:Bee):void {
     var index = this.bees.indexOf(bee);
     if(index >= 0){
@@ -83,16 +113,29 @@ class Place {
     }
   }
 
+    /**
+     * Takes all bees off the board
+     */
   removeAllBees():void {
     this.bees.forEach((bee) => bee.setPlace(undefined) );
     this.bees = [];
   }
 
+    /**
+     * Removes a bee from the game and closes any more bees from being created
+     * @param bee
+     * 
+     */
   exitBee(bee:Bee):void {
     this.removeBee(bee);
     this.exit.addBee(bee);  
   }
 
+    /**
+     * Will remove any insect from the board regardless of type or affiliation.
+     * @param insect
+     * 
+     */
   removeInsect(insect:Insect) {
     if(insect instanceof Ant){
       this.removeAnt();
@@ -102,6 +145,9 @@ class Place {
     }
   }
 
+    /**
+     * Removes ants from water tile unless they are a Scuba ant that can exist on the environmental tile.
+     */
   act() {
     if(this.water){
       if(this.guard){
@@ -115,6 +161,8 @@ class Place {
 }
 
 
+/**
+ * Controls bees start and attack int othe ant colony*/
 class Hive extends Place {
   private waves:{[index:number]:Bee[]} = {}
 
@@ -122,6 +170,13 @@ class Hive extends Place {
     super('Hive');
   }
 
+    /**
+     * Determines the turn a bee attack starts and the number of bees in the hive.
+     * @param attackTurn  The wave bees start attacking
+     * @param numBees The number of bees for the board
+     * 
+     * 
+     */
   addWave(attackTurn:number, numBees:number):Hive {
     let wave:Bee[] = [];
     for(let i=0; i<numBees; i++) {
@@ -132,7 +187,13 @@ class Hive extends Place {
     this.waves[attackTurn] = wave;
     return this;
   }
-  
+
+    /**
+     * Sets a new board and adds bees to the attacking hive as well as progressing the state of the bees progression. 
+     * @param colony   Represents the ant colony and the active board
+     * @param currentTurn  The turn the game is on
+     * 
+     */
   invade(colony:AntColony, currentTurn:number): Bee[]{
     if(this.waves[currentTurn] !== undefined) {
       this.waves[currentTurn].forEach((bee) => {
@@ -149,7 +210,8 @@ class Hive extends Place {
   }
 }
 
-
+/**
+ * This class represents the board and the players game space*/
 class AntColony {
   private food:number;
   private places:Place[][] = [];
@@ -196,6 +258,11 @@ class AntColony {
 
   getBoosts():{[index:string]:number} { return this.boosts; }
 
+    /**
+     * Creates the list and adds a boost 
+     * @param boost The total number of boosts from a list
+     * 
+     */
   addBoost(boost:string){
     if(this.boosts[boost] === undefined){
       this.boosts[boost] = 0;
@@ -204,6 +271,13 @@ class AntColony {
     console.log('Found a '+boost+'!');
   }
 
+    /**
+     * Takes an ant and places it at the specified location based on colony criteria
+     * @param ant A new instance of ant
+     * @param place A specified location in the colonies lanes
+     * 
+     * 
+     */
   deployAnt(ant:Ant, place:Place):string {
     if(this.food >= ant.getFoodCost()){
       let success = place.addAnt(ant);
@@ -220,6 +294,12 @@ class AntColony {
     place.removeAnt();
   }
 
+    /**
+     * Adds a boost to an ant at a specified tile
+     * @param boost The name of a Boost 
+     * @param place The location to apply the boost
+     * 
+     */
   applyBoost(boost:string, place:Place):string {
     if(this.boosts[boost] === undefined || this.boosts[boost] < 1) {
       return 'no such boost';
@@ -232,6 +312,8 @@ class AntColony {
     return undefined;
   }
 
+    /**
+     * Ensures ants are guarded every turn*/
   antsAct() {
     this.getAllAnts().forEach((ant) => {
       if(ant instanceof GuardAnt) {
@@ -243,24 +325,30 @@ class AntColony {
     });    
   }
 
+    /**
+     * Makes bees sting ants on the specified tile*/
   beesAct() {
     this.getAllBees().forEach((bee) => {
       bee.act();
     });
   }
-
+    /**
+     * Clears all water tiles of not compatible insects*/
   placesAct() {
     for(let i=0; i<this.places.length; i++) {
       for(let j=0; j<this.places[i].length; j++) {
-        this.places[i][j].act();
+        this.places[i][j].act(); //All places accross board are checked for environmental effects
       }
     }    
   }
 
+    /**
+     * Lists all available ants on the board
+     * */
   getAllAnts():Ant[] {
     let ants = [];
     for(let i=0; i<this.places.length; i++) {
-      for(let j=0; j<this.places[i].length; j++) {
+      for(let j=0; j<this.places[i].length; j++) { // Second loop to iterate all tiles on both x and y axis
         if(this.places[i][j].getAnt() !== undefined) {
           ants.push(this.places[i][j].getAnt());
         }
@@ -269,10 +357,13 @@ class AntColony {
     return ants;
   }
 
+    /**
+     * Lists all available bees on the board
+     * */
   getAllBees():Bee[] {
     var bees = [];
     for(var i=0; i<this.places.length; i++){
-      for(var j=0; j<this.places[i].length; j++){
+      for(var j=0; j<this.places[i].length; j++){ //Second loop to iterate all tiles on both x and y axis
         bees = bees.concat(this.places[i][j].getBees());
       }
     }
@@ -280,11 +371,16 @@ class AntColony {
   }
 }
 
-
+/**
+ * Controls the flow of the game
+ * */
 class AntGame {
   private turn:number = 0;
   constructor(private colony:AntColony, private hive:Hive){}
 
+    /**
+     * Allows all insects to take turns and sets the game stage forward one turn
+     * */
   takeTurn() {
     console.log('');
     this.colony.antsAct();
@@ -297,6 +393,9 @@ class AntGame {
 
   getTurn() { return this.turn; }
 
+    /**
+     * Determines win state 
+     * */
   gameIsWon():boolean|undefined {
     if(this.colony.queenHasBees()){
       return false;
@@ -307,6 +406,12 @@ class AntGame {
     return undefined;
   }
 
+    /**
+     * Puts desired ant down on the board
+     * @param antType      The name of the ant unit
+     * @param placeCoordinates  The desired location to place the ant
+     * 
+     */
   deployAnt(antType:string, placeCoordinates:string):string {
     let ant;
     switch(antType.toLowerCase()) {
@@ -332,7 +437,11 @@ class AntGame {
       return 'illegal location';
     }
   }
-
+    /**
+     * Removes an ant from the board based off location
+     * @param placeCoordinates The desired location of an ant
+     * 
+     */
   removeAnt(placeCoordinates:string):string {
     try {
       let coords = placeCoordinates.split(',');
@@ -344,6 +453,12 @@ class AntGame {
     }    
   }
 
+    /**
+     * Applys a boost to an ant at a given location
+     * @param boostType  The name of the desired boost
+     * @param placeCoordinates  The location to apply the boost
+     * 
+     */
   boostAnt(boostType:string, placeCoordinates:string):string {
     try {
       let coords = placeCoordinates.split(',');
@@ -356,7 +471,10 @@ class AntGame {
 
   getPlaces():Place[][] { return this.colony.getPlaces(); }
   getFood():number { return this.colony.getFood(); }
-  getHiveBeesCount():number { return this.hive.getBees().length; }
+    getHiveBeesCount(): number { return this.hive.getBees().length; }
+    /**
+     * Lists all current available boosts
+     * */
   getBoostNames():string[] { 
     let boosts = this.colony.getBoosts();
     return Object.keys(boosts).filter((boost:string) => {

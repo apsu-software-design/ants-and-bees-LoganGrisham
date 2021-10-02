@@ -3,6 +3,7 @@ import {AntColony, AntGame, Hive} from './game';
 import {play, showMapOf} from './ui';
 
 
+
 if(process.argv[2] === '--debug'){ 
   //the scenario to debug with
   var colony = new AntColony(16,1,8,0); //testing colony
