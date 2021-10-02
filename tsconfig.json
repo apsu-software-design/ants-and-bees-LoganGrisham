@@ -1,16 +1,20 @@
 {
-    "compilerOptions": {
-        "target": "es5",
-        "module": "commonjs",
-        "sourceMap": true,
-        "outDir": "build/",
-        "removeComments": true,
-        "alwaysStrict": true
-    },
-    "include": [
-        "src/**/*"
-    ],
-    "exclude": [
-        "node_modules"
-    ]
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "sourceMap": true,
+    "outDir": "build/",
+    "removeComments": true,
+    "alwaysStrict": true
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "typedocOptions": {
+    "entryPoints": [ "src/index.ts", "src/game.ts", "src/ants.ts" ,"src/ui.ts" ],
+    "out": "docs"
+  },
+  "exclude": [
+    "node_modules"
+  ]
 }
